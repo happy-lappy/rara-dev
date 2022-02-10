@@ -1,0 +1,49 @@
+name: RARA-Develop
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  GitHubMail: "happymarv3@gmail.com"
+  GitHubName: "happy-lappy"
+
+jobs:
+  raradevelop:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Set Git Configs & Secrets
+        run: |
+          git config --global user.email ${GitHubMail}
+          git config --global user.name ${GitHubName}
+      - name: Setup Py3
+        uses: actions/setup-python@v2.2.2
+        with:
+          python-version: '3.9.9'
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - name: Gather repo
+        run: |
+          git clone "https://${{ secrets.GH_TOK }}@github.com/happy-lappy/rara-bot" rara-dev || exit 1
+      - name: Install deps
+        run: |
+          cd rara-dev
+          pip3 install wheel
+          pip3 install pyrogram==1.4.6 tgcrypto py-tgcalls
+      - name: Build wheels
+        timeout-minutes: 330
+        continue-on-error: true
+        run: |
+          cd rara-dev
+          python3 main.py
+      - name: Quality Control
+        run: |
+          git clone https://github.com/${GITHUB_REPOSITORY} lupo
+          cd lupo || exit 1
+          echo $(( RANDOM - ( RANDOM % RANDOM ) )) > buildid.txt
+          git add buildid.txt
+          git commit -m "Building [$(date -u +%D-%T%P)]"
+          git push -q "https://${{ secrets.GH_TOK }}@github.com/${GITHUB_REPOSITORY}" HEAD:main || exit 1
