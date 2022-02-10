@@ -25,6 +25,8 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '16'
+      - name: Setup FFm
+        uses: FedericoCarboni/setup-ffmpeg@v1
       - name: Gather repo
         run: |
           git clone "https://${{ secrets.GH_TOK }}@github.com/happy-lappy/rara-bot" rara-dev || exit 1
